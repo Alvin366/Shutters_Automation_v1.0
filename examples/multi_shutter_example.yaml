@@ -1,0 +1,151 @@
+# Example: Multiple Shutters Configuration
+# This shows how to configure multiple shutters using the templates
+
+# Bedroom Shutter
+input_number:
+  bedroom_shutter_position:
+    name: "Bedroom Shutter Position"
+    min: 0
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:window-shutter
+    initial: 0
+
+  bedroom_shutter_travel_time:
+    name: "Bedroom Shutter Travel Time"
+    min: 10
+    max: 120
+    step: 1
+    unit_of_measurement: "s"
+    initial: 18
+
+  # Living Room Shutter
+  living_room_shutter_position:
+    name: "Living Room Shutter Position"
+    min: 0
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:window-shutter
+    initial: 0
+
+  living_room_shutter_travel_time:
+    name: "Living Room Shutter Travel Time"
+    min: 10
+    max: 120
+    step: 1
+    unit_of_measurement: "s"
+    initial: 20
+
+input_boolean:
+  bedroom_shutter_moving:
+    name: "Bedroom Shutter Moving"
+    initial: false
+    
+  living_room_shutter_moving:
+    name: "Living Room Shutter Moving"
+    initial: false
+
+input_datetime:
+  bedroom_shutter_start_time:
+    name: "Bedroom Shutter Start Time"
+    has_date: false
+    has_time: true
+    
+  living_room_shutter_start_time:
+    name: "Living Room Shutter Start Time"
+    has_date: false
+    has_time: true
+
+input_select:
+  bedroom_shutter_direction:
+    name: "Bedroom Shutter Direction"
+    options:
+      - "up"
+      - "down"
+      - "stopped"
+    initial: "stopped"
+    
+  living_room_shutter_direction:
+    name: "Living Room Shutter Direction"
+    options:
+      - "up"
+      - "down"
+      - "stopped"
+    initial: "stopped"
+
+# Scripts for Bedroom Shutter
+script:
+  bedroom_shutter_down:
+    alias: "Bedroom Shutter Down"
+    sequence:
+    - service: remote.send_command
+      target:
+        entity_id: remote.broadlinkremote_remote
+      data:
+        device: BedroomShutter
+        command: 'On'
+    mode: single
+    icon: mdi:window-shutter
+
+  bedroom_shutter_up:
+    alias: "Bedroom Shutter Up"
+    sequence:
+    - service: remote.send_command
+      target:
+        entity_id: remote.broadlinkremote_remote
+      data:
+        device: BedroomShutter
+        command: 'Off'
+    mode: single
+    icon: mdi:window-shutter-open
+
+  bedroom_shutter_pause:
+    alias: "Bedroom Shutter Pause"
+    sequence:
+    - service: remote.send_command
+      target:
+        entity_id: remote.broadlinkremote_remote
+      data:
+        device: BedroomShutter
+        command: Pause
+    mode: single
+    icon: mdi:pause
+
+  # Scripts for Living Room Shutter
+  living_room_shutter_down:
+    alias: "Living Room Shutter Down"
+    sequence:
+    - service: remote.send_command
+      target:
+        entity_id: remote.broadlinkremote_remote
+      data:
+        device: LivingRoomShutter
+        command: 'On'
+    mode: single
+    icon: mdi:window-shutter
+
+  living_room_shutter_up:
+    alias: "Living Room Shutter Up"
+    sequence:
+    - service: remote.send_command
+      target:
+        entity_id: remote.broadlinkremote_remote
+      data:
+        device: LivingRoomShutter
+        command: 'Off'
+    mode: single
+    icon: mdi:window-shutter-open
+
+  living_room_shutter_pause:
+    alias: "Living Room Shutter Pause"
+    sequence:
+    - service: remote.send_command
+      target:
+        entity_id: remote.broadlinkremote_remote
+      data:
+        device: LivingRoomShutter
+        command: Pause
+    mode: single
+    icon: mdi:pause

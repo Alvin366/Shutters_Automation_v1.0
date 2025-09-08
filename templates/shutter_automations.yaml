@@ -1,0 +1,193 @@
+# Generic Shutter Automations Template
+# Replace {SHUTTER_NAME} with your shutter name
+# Replace {UNIQUE_ID_PREFIX} with a unique identifier for automation IDs
+
+automation:
+  - id: {UNIQUE_ID_PREFIX}_shutter_track_up
+    alias: "{SHUTTER_DISPLAY_NAME} Shutter - Track Up Movement"
+    description: "Track shutter position when moving up"
+    triggers:
+    - platform: event
+      event_type: script_started
+      event_data:
+        entity_id: script.{SHUTTER_NAME}_shutter_up
+    conditions: []
+    actions:
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.{SHUTTER_NAME}_shutter_direction
+      data:
+        option: up
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.{SHUTTER_NAME}_shutter_moving
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.{SHUTTER_NAME}_shutter_start_time
+      data:
+        time: '{{ now().strftime(''%H:%M:%S'') }}'
+    mode: single
+
+  - id: {UNIQUE_ID_PREFIX}_shutter_track_down
+    alias: "{SHUTTER_DISPLAY_NAME} Shutter - Track Down Movement"
+    description: "Track shutter position when moving down"
+    triggers:
+    - platform: event
+      event_type: script_started
+      event_data:
+        entity_id: script.{SHUTTER_NAME}_shutter_down
+    conditions: []
+    actions:
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.{SHUTTER_NAME}_shutter_direction
+      data:
+        option: down
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.{SHUTTER_NAME}_shutter_moving
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.{SHUTTER_NAME}_shutter_start_time
+      data:
+        time: '{{ now().strftime(''%H:%M:%S'') }}'
+    mode: single
+
+  - id: {UNIQUE_ID_PREFIX}_shutter_stop_tracking
+    alias: "{SHUTTER_DISPLAY_NAME} Shutter - Stop Movement Tracking"
+    description: "Stop tracking and calculate position when shutter stops"
+    triggers:
+    - platform: event
+      event_type: script_started
+      event_data:
+        entity_id: script.{SHUTTER_NAME}_shutter_pause
+    conditions:
+    - condition: state
+      entity_id: input_boolean.{SHUTTER_NAME}_shutter_moving
+      state: 'on'
+    actions:
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.{SHUTTER_NAME}_shutter_moving
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.{SHUTTER_NAME}_shutter_direction
+      data:
+        option: stopped
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.{SHUTTER_NAME}_shutter_position
+      data:
+        value: >-
+          {% set current_pos = states('input_number.{SHUTTER_NAME}_shutter_position') | int %}
+          {% set travel_time = states('input_number.{SHUTTER_NAME}_shutter_travel_time') | int %}
+          {% set start_time = states('input_datetime.{SHUTTER_NAME}_shutter_start_time') %}
+          {% set current_time = now().strftime('%H:%M:%S') %}
+          {% set start_seconds = start_time.split(':')[0]|int * 3600 + start_time.split(':')[1]|int * 60 + start_time.split(':')[2]|int %}
+          {% set current_seconds = current_time.split(':')[0]|int * 3600 + current_time.split(':')[1]|int * 60 + current_time.split(':')[2]|int %}
+          {% set elapsed_seconds = current_seconds - start_seconds %}
+          {% set direction = states('input_select.{SHUTTER_NAME}_shutter_direction') %}
+          
+          {% if direction == 'up' %}
+            {% set current_time_in_curve = (-1 * (1 - current_pos/100) | log) / 0.198 if current_pos > 0 else 0 %}
+            {% set new_time = current_time_in_curve - elapsed_seconds %}
+            {% if new_time <= 0 %}
+              0
+            {% else %}
+              {{ (100 * (1 - (2.718281828 ** (-0.198 * new_time)))) | round(0) | int }}
+            {% endif %}
+          {% elif direction == 'down' %}
+            {% set current_time_in_curve = (-1 * (1 - current_pos/100) | log) / 0.198 if current_pos > 0 else 0 %}
+            {% set new_time = current_time_in_curve + elapsed_seconds %}
+            {% if new_time >= travel_time %}
+              100
+            {% else %}
+              {{ (100 * (1 - (2.718281828 ** (-0.198 * new_time)))) | round(0) | int }}
+            {% endif %}
+          {% else %}
+            {{ current_pos }}
+          {% endif %}
+    mode: single
+
+  - id: {UNIQUE_ID_PREFIX}_shutter_position_control
+    alias: "{SHUTTER_DISPLAY_NAME} Shutter - Position Control"
+    description: "Move shutter to specific position when slider changes"
+    triggers:
+    - platform: state
+      entity_id: input_number.{SHUTTER_NAME}_shutter_position
+      for:
+        seconds: 2
+    conditions:
+    - condition: state
+      entity_id: input_boolean.{SHUTTER_NAME}_shutter_moving
+      state: 'off'
+    actions:
+    - variables:
+        target_position: '{{ trigger.to_state.state | int }}'
+        current_position: '{{ trigger.from_state.state | int }}'
+        travel_time: '{{ states(''input_number.{SHUTTER_NAME}_shutter_travel_time'') | int }}'
+        position_diff: '{{ (target_position - current_position) | abs }}'
+        target_time: >-
+          {% if target_position == 0 %}
+            0
+          {% elif target_position >= 100 %}
+            {{ travel_time }}
+          {% else %}
+            {{ ((-1 * (1 - target_position/100) | log) / 0.198) | round(1) }}
+          {% endif %}
+        current_time: >-
+          {% if current_position == 0 %}
+            0
+          {% elif current_position >= 100 %}
+            {{ travel_time }}
+          {% else %}
+            {{ ((-1 * (1 - current_position/100) | log) / 0.198) | round(1) }}
+          {% endif %}
+        move_time: '{{ (target_time - current_time) | abs }}'
+    - choose:
+      - conditions:
+        - condition: template
+          value_template: '{{ target_position > current_position }}'
+        sequence:
+        - action: script.{SHUTTER_NAME}_shutter_down
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.{SHUTTER_NAME}_shutter_direction
+          data:
+            option: down
+        - action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.{SHUTTER_NAME}_shutter_moving
+        - delay:
+            seconds: '{{ move_time }}'
+        - action: script.{SHUTTER_NAME}_shutter_pause
+      - conditions:
+        - condition: template
+          value_template: '{{ target_position < current_position }}'
+        sequence:
+        - action: script.{SHUTTER_NAME}_shutter_up
+        - action: input_select.select_option
+          target:
+            entity_id: input_select.{SHUTTER_NAME}_shutter_direction
+          data:
+            option: up
+        - action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.{SHUTTER_NAME}_shutter_moving
+        - delay:
+            seconds: '{{ move_time }}'
+        - action: script.{SHUTTER_NAME}_shutter_pause
+    mode: single
+
+  - id: {UNIQUE_ID_PREFIX}_reset_shutter_moving
+    alias: "Reset {SHUTTER_DISPLAY_NAME} Shutter Moving Boolean"
+    description: "Reset stuck boolean on Home Assistant start"
+    triggers:
+    - platform: homeassistant
+      event: start
+    conditions: []
+    actions:
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.{SHUTTER_NAME}_shutter_moving
+    mode: single

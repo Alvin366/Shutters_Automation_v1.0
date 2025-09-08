@@ -1,0 +1,41 @@
+# Generic Shutter Scripts Template
+# Replace {SHUTTER_NAME} with your shutter name
+# Replace {BROADLINK_ENTITY} with your Broadlink remote entity_id
+# Replace {DEVICE_NAME} with your RF device name in Broadlink
+
+script:
+  {SHUTTER_NAME}_shutter_down:
+    alias: "{SHUTTER_DISPLAY_NAME} Shutter Down"
+    sequence:
+    - service: remote.send_command
+      target:
+        entity_id: {BROADLINK_ENTITY}
+      data:
+        device: {DEVICE_NAME}
+        command: 'On'
+    mode: single
+    icon: mdi:window-shutter
+
+  {SHUTTER_NAME}_shutter_up:
+    alias: "{SHUTTER_DISPLAY_NAME} Shutter Up"
+    sequence:
+    - service: remote.send_command
+      target:
+        entity_id: {BROADLINK_ENTITY}
+      data:
+        device: {DEVICE_NAME}
+        command: 'Off'
+    mode: single
+    icon: mdi:window-shutter-open
+
+  {SHUTTER_NAME}_shutter_pause:
+    alias: "{SHUTTER_DISPLAY_NAME} Shutter Pause"
+    sequence:
+    - service: remote.send_command
+      target:
+        entity_id: {BROADLINK_ENTITY}
+      data:
+        device: {DEVICE_NAME}
+        command: 'Pause'
+    mode: single
+    icon: mdi:pause

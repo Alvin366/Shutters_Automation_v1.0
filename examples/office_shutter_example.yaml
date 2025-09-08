@@ -1,0 +1,82 @@
+# Example: Office Shutter Configuration
+# This shows how to use the templates for the office shutter
+
+# Input Numbers (from shutter_inputs.yaml template)
+input_number:
+  office_shutter_position:
+    name: "Office Shutter Position"
+    min: 0
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:window-shutter
+    initial: 13
+
+  office_shutter_travel_time:
+    name: "Office Shutter Travel Time"
+    min: 10
+    max: 120
+    step: 1
+    unit_of_measurement: "s"
+    initial: 15
+
+# Input Boolean (from shutter_inputs.yaml template)
+input_boolean:
+  office_shutter_moving:
+    name: "Office Shutter Moving"
+    initial: false
+
+# Input DateTime (from shutter_inputs.yaml template)
+input_datetime:
+  office_shutter_start_time:
+    name: "Office Shutter Start Time"
+    has_date: false
+    has_time: true
+
+# Input Select (from shutter_inputs.yaml template)
+input_select:
+  office_shutter_direction:
+    name: "Office Shutter Direction"
+    options:
+      - "up"
+      - "down" 
+      - "stopped"
+    initial: "stopped"
+
+# Scripts (from shutter_scripts.yaml template)
+script:
+  officeshutter_on:
+    alias: "Office Shutter Down"
+    sequence:
+    - service: remote.send_command
+      target:
+        entity_id: remote.broadlinkremote_remote
+      data:
+        device: OfficeShutter
+        command: 'On'
+    mode: single
+    icon: mdi:window-shutter
+
+  officeshutter_on_2:
+    alias: "Office Shutter Up"
+    sequence:
+    - service: remote.send_command
+      target:
+        entity_id: remote.broadlinkremote_remote
+      data:
+        device: OfficeShutter
+        command: 'Off'
+    mode: single
+    icon: mdi:window-shutter-open
+
+  officeshutter_pause:
+    alias: "Office Shutter Pause"
+    sequence:
+    - service: remote.send_command
+      target:
+        entity_id: remote.broadlinkremote_remote
+      data:
+        device: OfficeShutter
+        command: Pause
+    mode: single
+    icon: mdi:pause

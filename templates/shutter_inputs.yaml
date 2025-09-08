@@ -1,0 +1,40 @@
+# Generic Shutter Input Templates
+# Replace {SHUTTER_NAME} with your shutter name (e.g., office, bedroom, living_room)
+
+input_number:
+  {SHUTTER_NAME}_shutter_position:
+    name: "{SHUTTER_DISPLAY_NAME} Shutter Position"
+    min: 0
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:window-shutter
+    initial: 0
+
+  {SHUTTER_NAME}_shutter_travel_time:
+    name: "{SHUTTER_DISPLAY_NAME} Shutter Travel Time"
+    min: 10
+    max: 120
+    step: 1
+    unit_of_measurement: "s"
+    initial: 15
+
+input_boolean:
+  {SHUTTER_NAME}_shutter_moving:
+    name: "{SHUTTER_DISPLAY_NAME} Shutter Moving"
+    initial: false
+
+input_datetime:
+  {SHUTTER_NAME}_shutter_start_time:
+    name: "{SHUTTER_DISPLAY_NAME} Shutter Start Time"
+    has_date: false
+    has_time: true
+
+input_select:
+  {SHUTTER_NAME}_shutter_direction:
+    name: "{SHUTTER_DISPLAY_NAME} Shutter Direction"
+    options:
+      - "up"
+      - "down"
+      - "stopped"
+    initial: "stopped"

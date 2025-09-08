@@ -1,0 +1,25 @@
+# Generic Shutter Sensors Template
+# Replace {SHUTTER_NAME} with your shutter name
+
+sensor:
+  - platform: template
+    sensors:
+      {SHUTTER_NAME}_shutter_position_display:
+        friendly_name: "{SHUTTER_DISPLAY_NAME} Shutter Position"
+        unit_of_measurement: "%"
+        value_template: "{{ states('input_number.{SHUTTER_NAME}_shutter_position') | int }}"
+        icon_template: mdi:window-shutter
+      
+      {SHUTTER_NAME}_shutter_position_calibrated:
+        friendly_name: "{SHUTTER_DISPLAY_NAME} Shutter Position (Calibrated)"
+        unit_of_measurement: "%"
+        value_template: >-
+          {% set t = states('input_number.{SHUTTER_NAME}_shutter_position') | float %}
+          {% if t <= 0 %}
+            0
+          {% elif t >= 99.5 %}
+            100
+          {% else %}
+            {{ (100 * (1 - (2.718281828 ** (-0.22 * t)))) | round(1) }}
+          {% endif %}
+        icon_template: mdi:window-shutter
